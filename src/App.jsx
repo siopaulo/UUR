@@ -85,12 +85,14 @@ function App() {
                     overflow: 'auto',
                     padding: 2
                 }}>
-                    <Grid container spacing={1} justifyContent={'space-evenly'} alignItems={'stretch'} direction={'column'} columns={gridSize.x} rows={gridSize.y}>
+                    <Grid container spacing={1} justifyContent={'center'}  height={"100%"} alignItems={'stretch'} direction={'row'} columns={gridSize.x} rows={gridSize.y}>
                         {[...Array(gridSize.y)].map((_, rowIndex) => (
                             [...Array(gridSize.x)].map((_, colIndex) => (
                                 <Grid size={1} item key={`${rowIndex}-${colIndex}`}>
                                     <Box
                                         sx={{
+                                            height: '100%',
+                                            width: '100%',
                                             backgroundColor: 'silver',
                                             borderRadius: '8px',
                                             '&:hover': {
