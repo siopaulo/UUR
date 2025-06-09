@@ -1,5 +1,5 @@
 import SplitButton from './SplitButton';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BasicModal from "./BasicModal.jsx";
 import NestedList from "./NestedList.jsx";
 import Box from '@mui/material/Box';
@@ -8,11 +8,17 @@ import { Grid } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import GridSizeControls from './GridSizeControls';
 import Typography from "@mui/material/Typography";
+import Button from '@mui/material/Button';
 
 function App() {
     const [isOpen, setIsOpen] = useState(false);
     const [gridSize, setGridSize] = useState({ x: 3, y: 3 });
-    const profile = useProfile();
+    const { profile } = useProfile();
+    const [grid, setGrid] = useState(() => Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ' ')));
+
+    useEffect(() => {
+        setGrid(Array.from({ length: gridSize.y }, () => Array.from({ length: gridSize.x }, () => ' ')));
+    }, [gridSize]);
 
     const handleSizeChange = (axis) => (event) => {
         const value = parseInt(event.target.value) || 3;
@@ -27,6 +33,23 @@ function App() {
             ...prev,
             [axis]: newValue
         }));
+    };
+
+    const handleDrop = (row, col, char) => {
+        setGrid(prev => {
+            const copy = prev.map(r => [...r]);
+            copy[row][col] = char;
+            return copy;
+        });
+    };
+
+    const handleExport = () => {
+        const content = grid.map(row => row.join('')).join('\n');
+        const blob = new Blob([content], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'map.txt';
+        a.click();
     };
 
     return (
@@ -48,9 +71,27 @@ function App() {
                 borderRadius:'0 20px 20px 0',
                 top:'10%',
                 backgroundColor:'#5a5a5a',
-                width:'20%',
-                height:'80%'
+                width:{xs:'30%', md:'20%'},
+                height:'80%',
+                overflow:'auto'
             }}>
+                {Object.entries(profile.categories).map(([key, value]) => (
+                    value.expandable ?
+                        value.options.map(opt => (
+                            <Box key={key + opt.name}
+                                 draggable
+                                 onDragStart={e => e.dataTransfer.setData('text/plain', opt.character)}
+                                 sx={{color:'white', padding:'4px', cursor:'grab'}}>
+                                {opt.name} ({opt.character})
+                            </Box>
+                        )) :
+                        <Box key={key}
+                             draggable
+                             onDragStart={e => e.dataTransfer.setData('text/plain', value.character)}
+                             sx={{color:'white', padding:'4px', cursor:'grab'}}>
+                            {key} ({value.character})
+                        </Box>
+                ))}
             </Box>
             <Box sx={{
                 position:'absolute',
@@ -58,7 +99,7 @@ function App() {
                 borderRadius:'20px 0 0 20px',
                 top:'10%',
                 backgroundColor:'#5a5a5a',
-                width:'20%',
+                width:{xs:'30%', md:'20%'},
                 height:'80%'
             }}>
                 <GridSizeControls
@@ -66,12 +107,13 @@ function App() {
                     onSizeChange={handleSizeChange}
                     onSliderChange={handleSliderChange}
                 />
+                <Button variant="contained" sx={{mt:2}} onClick={handleExport}>Export</Button>
             </Box>
             <Box sx={{
                 position:'absolute',
                 left:'30%',
                 top:'10%',
-                width:'40%',
+                width:{xs:'90%', md:'40%'},
                 height:"80%",
                 backgroundColor:'#6a6a6a',
                 borderRadius: '20px',
@@ -86,30 +128,38 @@ function App() {
                     padding: 2
                 }}>
                     <Grid container spacing={1} justifyContent={'center'}  height={"100%"} alignItems={'stretch'} direction={'row'} columns={gridSize.x} rows={gridSize.y}>
-                        {[...Array(gridSize.y)].map((_, rowIndex) => (
-                            [...Array(gridSize.x)].map((_, colIndex) => (
+                        {grid.map((row,rowIndex) => (
+                            row.map((cell, colIndex) => (
                                 <Grid size={1} item key={`${rowIndex}-${colIndex}`}>
                                     <Box
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={e => handleDrop(rowIndex, colIndex, e.dataTransfer.getData('text/plain'))}
                                         sx={{
                                             height: '100%',
                                             width: '100%',
                                             backgroundColor: 'silver',
                                             borderRadius: '8px',
+                                            display:'flex',
+                                            alignItems:'center',
+                                            justifyContent:'center',
+                                            fontWeight:'bold',
                                             '&:hover': {
                                                 backgroundColor: '#b8b8b8',
                                                 cursor: 'pointer'
                                             }
                                         }}
-                                    />
+                                    >{cell}</Box>
                                 </Grid>
                             ))
                         ))}
                     </Grid>
                 </Box>
             </Box>
-            {isOpen && <BasicModal title={profile.name} isOpen={isOpen} setIsOpen={setIsOpen}>
-                <NestedList/>
-            </BasicModal>}
+            {isOpen && (
+                <BasicModal title={profile.name} isOpen={isOpen} setIsOpen={setIsOpen}>
+                    <NestedList/>
+                </BasicModal>
+            )}
         </div>
     );
 }

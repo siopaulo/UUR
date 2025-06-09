@@ -10,3 +10,8 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Map Editor features
+- Profiles are stored in localStorage and can be edited in the profile modal.
+- Elements from the current profile are shown on the left panel and can be dragged onto the grid.
+- The grid can be exported as a text map using the Export button.
