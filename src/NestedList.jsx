@@ -44,7 +44,14 @@ function ExpandableItem(props) {
     }
 
     const handleAdd = () => {
-        setOptions([...options,{icon: "default", name: name,character: char}]);
+        const newOption = {icon: "default", name: name, character: char};
+        setOptions([...options, newOption]);
+        props.setProfile(prev => {
+            const updated = { ...prev };
+            const opts = updated.categories[props.Category].options || [];
+            updated.categories[props.Category].options = [...opts, newOption];
+            return updated;
+        });
         setName('');
         setChar('');
     }
@@ -102,7 +109,8 @@ ExpandableItem.propTypes = {
     open: PropTypes.bool,
     Category: PropTypes.string,
     Color: PropTypes.string,
-    Icon: PropTypes.string
+    Icon: PropTypes.string,
+    setProfile: PropTypes.func
 };
 
 function SimpleItem(props) {
@@ -136,7 +144,7 @@ SimpleItem.propTypes = {
 
 
 export default function NestedList() {
-    const profile = useProfile();
+    const { profile, setProfile } = useProfile();
     return (
         <List
             sx={{width: '100%', bgcolor: 'background.paper' }}
@@ -145,7 +153,8 @@ export default function NestedList() {
 
         >
             {Object.entries(profile.categories).map(([key, value]) => (
-                value.expandable?<ExpandableItem Category={key} Color={styles.expandable.color} Icon={value.icon} options={value.options||[]}/>:
+                value.expandable?
+                    <ExpandableItem Category={key} Color={styles.expandable.color} Icon={value.icon} options={value.options||[]} setProfile={setProfile} />:
                     <SimpleItem Category={key} Color={styles.simple.color} Icon={value.icon} Character={value.character}/>
             ))}
 
